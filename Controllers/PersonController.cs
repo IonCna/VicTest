@@ -1,14 +1,15 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using VicTest.Handlers;
 using VicTest.Models;
-using VicTest.Services;
+using VicTest.Services.Interfaces;
 
 namespace VicTest.Controllers;
 
 [Route("api/[controller]/[action]")]
 [ApiController]
-public class PersonController : ControllerBase
+public class PersonController(IPersonService personService) : ControllerBase
 {
-    private readonly PersonService _personService = new();
+    private readonly IPersonService _personService = personService;
 
     [HttpPost]
     public ActionResult CreateNewPerson([FromBody] Person target)
@@ -20,15 +21,18 @@ public class PersonController : ControllerBase
                 return BadRequest("Modelo invalido");
             }
 
-            _personService.CreateNewPerson(target);
-
-            List<Person> list = _personService.GetPersonList();
-
+            List<Person> list = _personService.InsertOne(target);
             return Ok(list);
+        }
+        catch (ErrorHandler error)
+        {
+            Response.StatusCode = (int)error.StatusCode;
+            return new JsonResult(new { message = error.Message });
         }
         catch (Exception ex)
         {
-            return BadRequest($"Failed to create {ex.Message}");
+            Response.StatusCode = 500;
+            return new JsonResult(new { message = ex.Message });
         }
     }
 
@@ -37,12 +41,18 @@ public class PersonController : ControllerBase
     {
         try
         {
-            var list = _personService.GetPersonList();
+            var list = _personService.FindAll();
             return Ok(list);
+        }
+        catch (ErrorHandler error)
+        {
+            Response.StatusCode = (int)error.StatusCode;
+            return new JsonResult(new { message = error.Message });
         }
         catch (Exception ex)
         {
-            return BadRequest(ex.Message);
+            Response.StatusCode = 500;
+            return new JsonResult(new { message = ex.Message });
         }
     }
 

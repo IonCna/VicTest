@@ -1,10 +1,13 @@
 ﻿using VicTest.Models;
+using VicTest.Handlers;
+using VicTest.Services.Interfaces;
+using System.Net;
 
 namespace VicTest.Services;
 
-public class PersonService
+public class PersonService : IPersonService
 {
-    private List<Person> PersonList = [];
+    private readonly List<Person> PersonList = [];
     public PersonService() {
         Person Jose = new()
         {
@@ -41,12 +44,19 @@ public class PersonService
         return result ?? throw new Exception("persona no encontrada");
     }
 
-    public void CreateNewPerson(Person target) {
-        PersonList.Add(target);
-    }
+    public List<Person> FindAll() => [.. PersonList];
 
-    public List<Person> GetPersonList()
+    public List<Person> InsertOne(Person target)
     {
+
+        var itExist = PersonList.Where((person) => person.Id == target.Id);
+
+        if(itExist.Any())
+        {
+            throw new ErrorHandler(HttpStatusCode.Conflict, "Id duplicada");
+        }
+
+        PersonList.Add(target);
         return PersonList;
     }
 }
