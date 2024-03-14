@@ -1,0 +1,6 @@
+@VicTest_HostAddress = http://localhost:5124
+
+GET {{VicTest_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
